@@ -1,6 +1,7 @@
 import json
 import pika
 import docker
+import time
 
 def process_message(message):
     backend_host = message.get('backend_host')
@@ -23,7 +24,14 @@ def launch_container(env_vars):
     print(f"Container {container.id} started with environment variables {env_vars}")
 
 def start_consuming():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    while True:
+        try:
+            connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+            break
+        except pika.exceptions.AMQPConnectionError:
+            print("Waiting for RabbitMQ to be ready...")
+            time.sleep(5)
+
     channel = connection.channel()
     channel.queue_declare(queue='pipeline-run-step', durable=True)
 
