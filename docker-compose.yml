@@ -1,27 +1,24 @@
 version: '3.8'
 
 services:
-  pipeline-api:
-    build: .
-    ports:
-      - 5000:5000
-    environment:
-      - FLASK_ENV=development
-    depends_on:
-      - rabbitmq
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
   rabbitmq:
-    image: rabbitmq:3-management
+    image: 'rabbitmq:3-management'
     ports:
-      - 5672:5672
-      - 15672:15672
+      - '5672:5672'
+      - '15672:15672'
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
 
-volumes:
-  rabbitmq-data:
+  web:
+    build: .
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock  # Permettre l'accès au démon Docker
+    depends_on:
+      - rabbitmq
+    environment:
+      - CELERY_BROKER_URL=pyamqp://guest@rabbitmq//
+      - CELERY_RESULT_BACKEND=rpc://
+    command: >
+      bash -c "sleep 10 && celery -A app.celery_app worker --loglevel=info & python -m app.run"
