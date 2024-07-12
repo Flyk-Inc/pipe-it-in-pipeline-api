@@ -18,7 +18,7 @@ def run_container(backend_host, pipeline_run_step_id):
         image_name,
         detach=True,
         environment={
-            'BACKEND_HOST': backend_host,
+            'BACKEND_URL': backend_host,
             'PIPELINE_RUN_STEP_ID': pipeline_run_step_id
         }
     )
