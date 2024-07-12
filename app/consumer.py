@@ -1,4 +1,5 @@
 import pika
+import json
 import time
 from app.tasks import run_container
 
@@ -13,7 +14,15 @@ def connect_to_rabbitmq():
     raise Exception('Failed to connect to RabbitMQ after multiple attempts')
 
 def callback(ch, method, properties, body):
-    run_container.delay()
+    message = json.loads(body)
+    backend_host = message.get('backendHost')
+    pipeline_run_step_id = message.get('pipelineRunStepId')
+
+    if not backend_host or not pipeline_run_step_id:
+        print("Invalid message received")
+        return
+
+    run_container.delay(backend_host, pipeline_run_step_id)
 
 def start_consuming():
     connection = connect_to_rabbitmq()

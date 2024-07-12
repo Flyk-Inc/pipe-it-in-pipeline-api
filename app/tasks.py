@@ -7,7 +7,7 @@ import os
 load_dotenv()
 
 @celery_app.task
-def run_container():
+def run_container(backend_host, pipeline_run_step_id):
     image_name = os.getenv('DOCKER_IMAGE_NAME')
 
     if not image_name:
@@ -16,7 +16,11 @@ def run_container():
     client = docker.from_env()
     container = client.containers.run(
         image_name,
-        detach=True
+        detach=True,
+        environment={
+            'BACKEND_HOST': backend_host,
+            'PIPELINE_RUN_STEP_ID': pipeline_run_step_id
+        }
     )
     print(f'Container {container.short_id} started')
 
