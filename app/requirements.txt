@@ -1,3 +1,4 @@
 celery
 docker
 pika
+python-dotenv

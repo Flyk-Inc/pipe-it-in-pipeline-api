@@ -1,19 +1,24 @@
 # app/tasks.py
 from . import celery_app
 import docker
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 @celery_app.task
 def run_container():
+    image_name = os.getenv('DOCKER_IMAGE_NAME')
+
+    if not image_name:
+        raise ValueError("DOCKER_IMAGE_NAME not found in environment variables")
+
     client = docker.from_env()
     container = client.containers.run(
-        #TODO replace image name
-        "python:3.9-slim",  # Remplacer par le nom réel de votre image
-        command="sleep 10",
+        image_name,
         detach=True
     )
     print(f'Container {container.short_id} started')
 
-    # Attendre que le conteneur se termine
     container.wait()
     print(f'Container {container.short_id} finished')
