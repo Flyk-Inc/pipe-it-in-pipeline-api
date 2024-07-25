@@ -3,6 +3,7 @@ import docker
 from dotenv import load_dotenv
 import os
 import time
+import requests
 
 load_dotenv()
 
@@ -31,6 +32,7 @@ def run_container(backend_host, pipeline_run_step_id):
         container.reload()
         if container.status == 'exited':
             print(f'Container {container.short_id} finished')
+            print(f'Logs:\n{container.logs().decode("utf-8")}')
             container.remove(force=True)
             print(f'Container {container.short_id} deleted')
             return
@@ -38,11 +40,12 @@ def run_container(backend_host, pipeline_run_step_id):
         time.sleep(10)
 
     # Timeout handling
+    print(f'Timeout reached for container {container.short_id}')
+    print(f'Logs:\n{container.logs().decode("utf-8")}')
     container.remove(force=True)
     print(f'Container {container.short_id} deleted after timeout')
 
     # Notify backend about the timeout
-    import requests
     requests.patch(
         f'{backend_host}/pipeline/step/{pipeline_run_step_id}/end',
         json={
